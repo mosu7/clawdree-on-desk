@@ -660,6 +660,36 @@ function createWindow() {
   win.webContents.on("did-finish-load", () => {
     applyState("idle");
   });
+
+  // ── Crash recovery: renderer process can die from <object> churn ──
+  win.webContents.on("render-process-gone", (_event, details) => {
+    console.error("Renderer crashed:", details.reason);
+    win.webContents.reload();
+  });
+
+  // ── Periodic alwaysOnTop refresh (Windows DWM can drop z-order) ──
+  setInterval(() => {
+    if (win && !win.isDestroyed()) {
+      win.setAlwaysOnTop(false);
+      win.setAlwaysOnTop(true);
+    }
+  }, 30000); // every 30s
+
+  // ── Display change: re-clamp window to prevent off-screen ──
+  screen.on("display-metrics-changed", () => {
+    if (!win || win.isDestroyed()) return;
+    const { x, y, width, height } = win.getBounds();
+    const clamped = clampToScreen(x, y, width, height);
+    if (clamped.x !== x || clamped.y !== y) {
+      win.setBounds({ ...clamped, width, height });
+    }
+  });
+  screen.on("display-removed", () => {
+    if (!win || win.isDestroyed()) return;
+    const { x, y, width, height } = win.getBounds();
+    const clamped = clampToScreen(x, y, width, height);
+    win.setBounds({ ...clamped, width, height });
+  });
 }
 
 function clampToScreen(x, y, w, h) {
