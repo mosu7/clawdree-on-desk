@@ -23,6 +23,11 @@ function getObjectSvgName(objectEl) {
   return parts[parts.length - 1] || null;
 }
 
+function getElementVisualName(el) {
+  if (!el) return null;
+  return getObjectSvgName(el);
+}
+
 const SVG_IDLE_FOLLOW = "clawd-idle-follow.svg";
 
 function shouldTrackEyes(state, svg) {
@@ -45,33 +50,25 @@ function playReaction(svgFile, durationMs) {
     pendingNext = null;
   }
 
-  const next = document.createElement("object");
-  next.type = "image/svg+xml";
-  next.id = "clawd";
+  const next = createVisualElement(svgFile);
   next.style.opacity = "0";
 
   const swap = () => {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.querySelectorAll("object")]) {
-      if (child !== next) child.remove();
+    for (const child of [...container.children]) {
+      if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
     clawdEl = next;
     currentDisplayedSvg = svgFile;
   };
 
-  next.addEventListener("load", swap, { once: true });
-  next.data = `../assets/svg/${svgFile}`;
+  attachVisualReadyHandler(next, swap);
   container.appendChild(next);
   pendingNext = next;
-  setTimeout(() => {
-    if (pendingNext !== next) return;
-    // If SVG failed to load, abandon swap and keep current display
-    try { if (!next.contentDocument) { next.remove(); pendingNext = null; return; } } catch {}
-    swap();
-  }, 3000);
+  installSwapFallback(next, swap);
 
   reactTimer = setTimeout(() => endReaction(), durationMs);
 }
@@ -97,30 +94,23 @@ function cancelReaction() {
 // --- Drag reaction (loops while dragging, idle-follow only) ---
 function swapToSvg(svgFile) {
   if (pendingNext) { pendingNext.remove(); pendingNext = null; }
-  const next = document.createElement("object");
-  next.type = "image/svg+xml";
-  next.id = "clawd";
+  const next = createVisualElement(svgFile);
   next.style.opacity = "0";
   const swap = () => {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.querySelectorAll("object")]) {
-      if (child !== next) child.remove();
+    for (const child of [...container.children]) {
+      if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
     clawdEl = next;
     currentDisplayedSvg = svgFile;
   };
-  next.addEventListener("load", swap, { once: true });
-  next.data = `../assets/svg/${svgFile}`;
+  attachVisualReadyHandler(next, swap);
   container.appendChild(next);
   pendingNext = next;
-  setTimeout(() => {
-    if (pendingNext !== next) return;
-    try { if (!next.contentDocument) { next.remove(); pendingNext = null; return; } } catch {}
-    swap();
-  }, 3000);
+  installSwapFallback(next, swap);
 }
 
 function startDragReaction() {
@@ -148,7 +138,7 @@ function endDragReaction() {
 // --- State change → switch SVG animation (preload + instant swap) ---
 let clawdEl = document.getElementById("clawd");
 let pendingNext = null;
-let currentDisplayedSvg = getObjectSvgName(clawdEl);
+let currentDisplayedSvg = getElementVisualName(clawdEl);
 currentIdleSvg = currentDisplayedSvg;
 
 window.electronAPI.onStateChange((state, svg) => {
@@ -170,17 +160,15 @@ window.electronAPI.onStateChange((state, svg) => {
   }
   detachEyeTracking();
 
-  const next = document.createElement("object");
-  next.type = "image/svg+xml";
-  next.id = "clawd";
+  const next = createVisualElement(svg);
   next.style.opacity = "0";
 
   const swap = () => {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.querySelectorAll("object")]) {
-      if (child !== next) child.remove();
+    for (const child of [...container.children]) {
+      if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
     clawdEl = next;
@@ -194,16 +182,42 @@ window.electronAPI.onStateChange((state, svg) => {
     currentIdleSvg = svg;
   };
 
-  next.addEventListener("load", swap, { once: true });
-  next.data = `../assets/svg/${svg}`;
+  attachVisualReadyHandler(next, swap);
   container.appendChild(next);
   pendingNext = next;
-  setTimeout(() => {
-    if (pendingNext !== next) return;
-    try { if (!next.contentDocument) { next.remove(); pendingNext = null; return; } } catch {}
-    swap();
-  }, 3000);
+  installSwapFallback(next, swap);
 });
+
+function createVisualElement(svgName) {
+  const obj = document.createElement("object");
+  obj.type = "image/svg+xml";
+  obj.id = "clawd";
+  obj.data = `../assets/svg/${svgName}`;
+  return obj;
+}
+
+function attachVisualReadyHandler(el, onReady) {
+  el.addEventListener("load", onReady, { once: true });
+}
+
+function installSwapFallback(el, onReady) {
+  setTimeout(() => {
+    if (pendingNext !== el) return;
+    try {
+      if (!el.contentDocument) { el.remove(); pendingNext = null; return; }
+    } catch {
+      el.remove();
+      pendingNext = null;
+      return;
+    }
+    onReady();
+  }, 3000);
+}
+
+function removeVisualElement(el) {
+  if (!el) return;
+  el.remove();
+}
 
 // --- Eye tracking (idle state only) ---
 let eyeTarget = null;
@@ -297,4 +311,3 @@ window.electronAPI.onWakeFromDoze(() => {
     } catch (e) {}
   }
 });
-
