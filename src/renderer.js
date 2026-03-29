@@ -3,6 +3,14 @@
 // Reactions are triggered via IPC from main (relayed from hit window).
 
 const container = document.getElementById("pet-container");
+const PNG_FRAME_ANIMATIONS = {
+  "clawd-idle-look.svg": {
+    prefix: "dree_look_",
+    frameCount: 8,
+    folder: "clawd-idle-look",
+    frameDurationMs: 125,
+  },
+};
 
 // --- Reaction state (visual side) ---
 const REACT_DRAG_SVG = "clawd-react-drag.svg";
