@@ -33,8 +33,7 @@ function getObjectSvgName(objectEl) {
 
 function getElementVisualName(el) {
   if (!el) return null;
-  if (el.tagName === "OBJECT") return getObjectSvgName(el);
-  return el.dataset.visualName || null;
+  return getObjectSvgName(el);
 }
 
 const SVG_IDLE_FOLLOW = "clawd-idle-follow.svg";
@@ -198,43 +197,20 @@ window.electronAPI.onStateChange((state, svg) => {
 });
 
 function createVisualElement(svgName) {
-  const pngConfig = PNG_FRAME_ANIMATIONS[svgName];
-  if (!pngConfig) {
-    const obj = document.createElement("object");
-    obj.type = "image/svg+xml";
-    obj.id = "clawd";
-    obj.data = `../assets/svg/${svgName}`;
-    return obj;
-  }
-
-  const img = document.createElement("img");
-  img.id = "clawd";
-  img.alt = svgName;
-  img.dataset.visualName = svgName;
-  img.dataset.frameDurationMs = String(pngConfig.frameDurationMs);
-  img.dataset.frameCount = String(pngConfig.frameCount);
-  img.dataset.folder = pngConfig.folder;
-  img.dataset.prefix = pngConfig.prefix;
-  startPngAnimation(img, pngConfig);
-  return img;
+  const obj = document.createElement("object");
+  obj.type = "image/svg+xml";
+  obj.id = "clawd";
+  obj.data = `../assets/svg/${svgName}`;
+  return obj;
 }
 
 function attachVisualReadyHandler(el, onReady) {
-  if (el.tagName === "IMG") {
-    el.addEventListener("load", onReady, { once: true });
-    return;
-  }
   el.addEventListener("load", onReady, { once: true });
 }
 
 function installSwapFallback(el, onReady) {
   setTimeout(() => {
     if (pendingNext !== el) return;
-    if (el.tagName === "IMG") {
-      if (!el.complete) { el.remove(); pendingNext = null; return; }
-      onReady();
-      return;
-    }
     try {
       if (!el.contentDocument) { el.remove(); pendingNext = null; return; }
     } catch {
@@ -246,24 +222,8 @@ function installSwapFallback(el, onReady) {
   }, 3000);
 }
 
-function startPngAnimation(img, config) {
-  let frame = 0;
-  const setFrame = () => {
-    img.src = `../assets/png/${config.folder}/${config.prefix}${frame}.png`;
-  };
-  setFrame();
-  img.__frameTimer = setInterval(() => {
-    frame = (frame + 1) % config.frameCount;
-    setFrame();
-  }, config.frameDurationMs);
-}
-
 function removeVisualElement(el) {
   if (!el) return;
-  if (el.__frameTimer) {
-    clearInterval(el.__frameTimer);
-    el.__frameTimer = null;
-  }
   el.remove();
 }
 
