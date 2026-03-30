@@ -7,18 +7,19 @@
         animation-name: frame-step;
         animation-duration: var(--duration);
         animation-timing-function: steps(1, end);
-        animation-iteration-count: infinite;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
         image-rendering: pixelated;
       }
-      .f0 { animation-delay: calc(var(--duration) * 0 / -9); }
-      .f1 { animation-delay: calc(var(--duration) * 1 / -9); }
-      .f2 { animation-delay: calc(var(--duration) * 2 / -9); }
-      .f3 { animation-delay: calc(var(--duration) * 3 / -9); }
-      .f4 { animation-delay: calc(var(--duration) * 4 / -9); }
-      .f5 { animation-delay: calc(var(--duration) * 5 / -9); }
-      .f6 { animation-delay: calc(var(--duration) * 6 / -9); }
-      .f7 { animation-delay: calc(var(--duration) * 7 / -9); }
-      .f8 { animation-delay: calc(var(--duration) * 8 / -9); }
+      .f0 { animation-delay: calc(var(--duration) * 0 / 9); }
+      .f1 { animation-delay: calc(var(--duration) * 1 / 9); }
+      .f2 { animation-delay: calc(var(--duration) * 2 / 9); }
+      .f3 { animation-delay: calc(var(--duration) * 3 / 9); }
+      .f4 { animation-delay: calc(var(--duration) * 4 / 9); }
+      .f5 { animation-delay: calc(var(--duration) * 5 / 9); }
+      .f6 { animation-delay: calc(var(--duration) * 6 / 9); }
+      .f7 { animation-delay: calc(var(--duration) * 7 / 9); }
+      .f8 { animation-delay: calc(var(--duration) * 8 / 9); }
       @keyframes frame-step {
         0%, 11.111% { opacity: 1; }
         11.112%, 100% { opacity: 0; }
