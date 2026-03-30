@@ -1,31 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
     <style>
-      :root { --duration: 0.72s; }
+      :root {
+        --intro-duration: 0.72s;
+        --loop-duration: 0.48s;
+      }
       .frame {
         opacity: 0;
-        animation-name: frame-step;
-        animation-duration: var(--duration);
+        animation-name: intro-step;
+        animation-duration: var(--intro-duration);
         animation-timing-function: steps(1, end);
-        animation-iteration-count: infinite;
+        animation-iteration-count: 1;
+        animation-fill-mode: both;
         image-rendering: pixelated;
       }
-      .f0 { animation-delay: calc(var(--duration) * 0 / -6); }
-      .f1 { animation-delay: calc(var(--duration) * 1 / -6); }
-      .f2 { animation-delay: calc(var(--duration) * 2 / -6); }
-      .f3 { animation-delay: calc(var(--duration) * 3 / -6); }
-      .f4 { animation-delay: calc(var(--duration) * 4 / -6); }
-      .f5 { animation-delay: calc(var(--duration) * 5 / -6); }
-      @keyframes frame-step {
+      .f0 { animation-delay: calc(var(--intro-duration) * 0 / -6); }
+      .f1 { animation-delay: calc(var(--intro-duration) * 1 / -6); }
+      .f2 { animation-delay: calc(var(--intro-duration) * 2 / -6); }
+      .f3 { animation-delay: calc(var(--intro-duration) * 3 / -6); }
+      .f4 { animation-delay: calc(var(--intro-duration) * 4 / -6); }
+      .f5 { animation-delay: calc(var(--intro-duration) * 5 / -6); }
+
+      .loop {
+        animation-name: intro-step, loop-step;
+        animation-duration: var(--intro-duration), var(--loop-duration);
+        animation-timing-function: steps(1, end), steps(1, end);
+        animation-iteration-count: 1, infinite;
+        animation-fill-mode: both, both;
+      }
+      .f2.loop { animation-delay: calc(var(--intro-duration) * 2 / -6), calc(var(--intro-duration) + var(--loop-duration) * 0 / -4); }
+      .f3.loop { animation-delay: calc(var(--intro-duration) * 3 / -6), calc(var(--intro-duration) + var(--loop-duration) * 1 / -4); }
+      .f4.loop { animation-delay: calc(var(--intro-duration) * 4 / -6), calc(var(--intro-duration) + var(--loop-duration) * 2 / -4); }
+      .f5.loop { animation-delay: calc(var(--intro-duration) * 5 / -6), calc(var(--intro-duration) * 1 + var(--loop-duration) * 3 / -4); }
+
+      @keyframes intro-step {
         0%, 16.666% { opacity: 1; }
         16.667%, 100% { opacity: 0; }
+      }
+      @keyframes loop-step {
+        0%, 25% { opacity: 1; }
+        25.001%, 100% { opacity: 0; }
       }
     </style>
   </defs>
   <image class="frame f0" href="../png/clawd-collapse-sleep/dree_collapse_sleep_0.png" x="64" y="128" width="128" height="128" />
   <image class="frame f1" href="../png/clawd-collapse-sleep/dree_collapse_sleep_1.png" x="64" y="128" width="128" height="128" />
-  <image class="frame f2" href="../png/clawd-collapse-sleep/dree_collapse_sleep_2.png" x="64" y="128" width="128" height="128" />
-  <image class="frame f3" href="../png/clawd-collapse-sleep/dree_collapse_sleep_3.png" x="64" y="128" width="128" height="128" />
-  <image class="frame f4" href="../png/clawd-collapse-sleep/dree_collapse_sleep_4.png" x="64" y="128" width="128" height="128" />
-  <image class="frame f5" href="../png/clawd-collapse-sleep/dree_collapse_sleep_5.png" x="64" y="128" width="128" height="128" />
+  <image class="frame f2 loop" href="../png/clawd-collapse-sleep/dree_collapse_sleep_2.png" x="64" y="128" width="128" height="128" />
+  <image class="frame f3 loop" href="../png/clawd-collapse-sleep/dree_collapse_sleep_3.png" x="64" y="128" width="128" height="128" />
+  <image class="frame f4 loop" href="../png/clawd-collapse-sleep/dree_collapse_sleep_4.png" x="64" y="128" width="128" height="128" />
+  <image class="frame f5 loop" href="../png/clawd-collapse-sleep/dree_collapse_sleep_5.png" x="64" y="128" width="128" height="128" />
 </svg>
