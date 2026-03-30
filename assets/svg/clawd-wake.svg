@@ -8,7 +8,7 @@
         animation-duration: var(--duration);
         animation-timing-function: steps(1, end);
         animation-iteration-count: 1;
-        animation-fill-mode: both;
+        animation-fill-mode: forwards;
         image-rendering: pixelated;
       }
       .f0 { animation-delay: calc(var(--duration) * 0 / 9); }

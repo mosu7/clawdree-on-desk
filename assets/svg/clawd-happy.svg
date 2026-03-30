@@ -7,8 +7,8 @@
       .f2 { animation: happy-frames 0.8s infinite steps(1, end); animation-delay: -0.4s; }
       .f3 { animation: happy-frames 0.8s infinite steps(1, end); animation-delay: -0.6s; }
       @keyframes happy-frames {
-        0%, 25% { opacity: 1; }
-        25.01%, 100% { opacity: 0; }
+        0%, 24.999% { opacity: 1; }
+        25%, 100% { opacity: 0; }
       }
     </style>
   </defs>

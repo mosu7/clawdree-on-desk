@@ -11,7 +11,6 @@
         animation-duration: var(--intro-duration);
         animation-timing-function: steps(1, end);
         animation-iteration-count: 1;
-        animation-fill-mode: both;
         image-rendering: pixelated;
       }
       .f0 { animation-delay: calc(var(--intro-duration) * 0 / -6); }
@@ -26,7 +25,7 @@
         animation-duration: var(--intro-duration), var(--loop-duration);
         animation-timing-function: steps(1, end), steps(1, end);
         animation-iteration-count: 1, infinite;
-        animation-fill-mode: both, both;
+        animation-fill-mode: none, forwards;
       }
       .f2.loop { animation-delay: calc(var(--intro-duration) * 2 / -6), calc(var(--intro-duration) + var(--loop-duration) * 0 / -4); }
       .f3.loop { animation-delay: calc(var(--intro-duration) * 3 / -6), calc(var(--intro-duration) + var(--loop-duration) * 1 / -4); }
