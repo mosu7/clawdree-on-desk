@@ -45,6 +45,11 @@ const i18n = {
     restartLater: "Later",
     download: "Download",
     bubbleFollow: "Bubble Follow Pet",
+    pomodoro: "Pomodoro",
+    pomodoroStart: "Start Pomodoro",
+    pomodoroPause: "Pause Pomodoro",
+    pomodoroResume: "Resume Pomodoro",
+    pomodoroStop: "Stop Pomodoro",
     sessions: "Sessions",
     noSessions: "No active sessions",
     sessionWorking: "Working",
@@ -87,6 +92,11 @@ const i18n = {
     restartLater: "稍后",
     download: "下载",
     bubbleFollow: "气泡跟随宠物",
+    pomodoro: "番茄钟",
+    pomodoroStart: "开始番茄钟",
+    pomodoroPause: "暂停番茄钟",
+    pomodoroResume: "继续番茄钟",
+    pomodoroStop: "停止番茄钟",
     sessions: "会话",
     noSessions: "无活跃会话",
     sessionWorking: "工作中",
@@ -348,6 +358,27 @@ module.exports = function initMenu(ctx) {
       {
         label: ctx.doNotDisturb ? t("wake") : t("sleep"),
         click: () => ctx.doNotDisturb ? ctx.disableDoNotDisturb() : ctx.enableDoNotDisturb(),
+      },
+      { type: "separator" },
+      {
+        label: t("pomodoro"),
+        submenu: [
+          {
+            label: t("pomodoroStart"),
+            enabled: !ctx.pomodoroRunning,
+            click: () => ctx.startPomodoro(),
+          },
+          {
+            label: ctx.pomodoroPaused ? t("pomodoroResume") : t("pomodoroPause"),
+            enabled: ctx.pomodoroVisible,
+            click: () => ctx.togglePomodoroPause(),
+          },
+          {
+            label: t("pomodoroStop"),
+            enabled: ctx.pomodoroVisible,
+            click: () => ctx.stopPomodoro(),
+          },
+        ],
       },
       { type: "separator" },
       {

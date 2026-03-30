@@ -87,12 +87,81 @@ let showTray = true;
 let showDock = true;
 let autoStartWithClaude = false;
 let bubbleFollowPet = false;
+let pomodoroPhase = "work";
+let pomodoroRemainingMs = 0;
+let pomodoroRunning = false;
+let pomodoroPaused = false;
+let pomodoroTimer = null;
+
+const POMODORO_WORK_MS = 45 * 60 * 1000;
+const POMODORO_BREAK_MS = 15 * 60 * 1000;
 
 function sendToRenderer(channel, ...args) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, ...args);
 }
 function sendToHitWin(channel, ...args) {
   if (hitWin && !hitWin.isDestroyed()) hitWin.webContents.send(channel, ...args);
+}
+
+function getPomodoroSnapshot() {
+  return {
+    visible: pomodoroRunning,
+    running: pomodoroRunning,
+    paused: pomodoroPaused,
+    phase: pomodoroPhase,
+    remainingMs: Math.max(0, pomodoroRemainingMs),
+  };
+}
+
+function broadcastPomodoroState() {
+  sendToRenderer("pomodoro-state", getPomodoroSnapshot());
+}
+
+function clearPomodoroTimer() {
+  if (pomodoroTimer) {
+    clearInterval(pomodoroTimer);
+    pomodoroTimer = null;
+  }
+}
+
+function beginPomodoroPhase(phase) {
+  pomodoroPhase = phase;
+  pomodoroRemainingMs = phase === "break" ? POMODORO_BREAK_MS : POMODORO_WORK_MS;
+  pomodoroRunning = true;
+  pomodoroPaused = false;
+  clearPomodoroTimer();
+  broadcastPomodoroState();
+  pomodoroTimer = setInterval(() => {
+    if (!pomodoroRunning || pomodoroPaused) return;
+    pomodoroRemainingMs = Math.max(0, pomodoroRemainingMs - 1000);
+    if (pomodoroRemainingMs === 0) {
+      const next = pomodoroPhase === "work" ? "break" : "work";
+      beginPomodoroPhase(next);
+      return;
+    }
+    broadcastPomodoroState();
+  }, 1000);
+}
+
+function startPomodoro() {
+  beginPomodoroPhase("work");
+  buildContextMenu();
+}
+
+function togglePomodoroPause() {
+  if (!pomodoroRunning) return;
+  pomodoroPaused = !pomodoroPaused;
+  broadcastPomodoroState();
+  buildContextMenu();
+}
+
+function stopPomodoro() {
+  pomodoroRunning = false;
+  pomodoroPaused = false;
+  pomodoroRemainingMs = 0;
+  clearPomodoroTimer();
+  broadcastPomodoroState();
+  buildContextMenu();
 }
 
 // Sync input window position to match render window's hitbox.
@@ -384,6 +453,12 @@ const _menuCtx = {
   clampToScreen,
   getNearestWorkArea,
   reapplyMacVisibility,
+  get pomodoroRunning() { return pomodoroRunning; },
+  get pomodoroPaused() { return pomodoroRunning && pomodoroPaused; },
+  get pomodoroVisible() { return pomodoroRunning; },
+  startPomodoro: () => startPomodoro(),
+  togglePomodoroPause: () => togglePomodoroPause(),
+  stopPomodoro: () => stopPomodoro(),
 };
 const _menu = require("./menu")(_menuCtx);
 const { t, buildContextMenu, buildTrayMenu, rebuildAllMenus, createTray,
@@ -600,6 +675,7 @@ function createWindow() {
   // If hooks arrived during startup, respect them instead of forcing idle
   // Also handles crash recovery (render-process-gone → reload)
   win.webContents.on("did-finish-load", () => {
+    broadcastPomodoroState();
     if (_mini.getMiniMode()) {
       sendToRenderer("mini-mode-change", true);
     sendToHitWin("hit-state-sync", { miniMode: true });
@@ -840,6 +916,7 @@ if (!gotTheLock) {
 
   app.on("before-quit", () => {
     isQuitting = true;
+    clearPomodoroTimer();
     savePrefs();
     _perm.cleanup();
     _server.cleanup();

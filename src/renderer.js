@@ -3,24 +3,19 @@
 // Reactions are triggered via IPC from main (relayed from hit window).
 
 const container = document.getElementById("pet-container");
-const PNG_FRAME_ANIMATIONS = {
-  "clawd-idle-look.svg": {
-    prefix: "dree_look_",
-    frameCount: 8,
-    folder: "clawd-idle-look",
-    frameDurationMs: 125,
-  },
-};
+const visualLayer = document.getElementById("pet-visual-layer");
 
 // --- Reaction state (visual side) ---
 const REACT_DRAG_SVG = "clawd-react-drag.svg";
 let isReacting = false;
 let isDragReacting = false;
 let reactTimer = null;
-let currentIdleSvg = null;    // tracks which SVG is currently showing
+let currentIdleSvg = null; // tracks which SVG is currently showing
 let dndEnabled = false;
 
-window.electronAPI.onDndChange((enabled) => { dndEnabled = enabled; });
+window.electronAPI.onDndChange((enabled) => {
+  dndEnabled = enabled;
+});
 
 function getObjectSvgName(objectEl) {
   if (!objectEl) return null;
@@ -52,7 +47,6 @@ function playReaction(svgFile, durationMs) {
   detachEyeTracking();
   window.electronAPI.pauseCursorPolling();
 
-  // Reuse existing swap pattern
   if (pendingNext) {
     pendingNext.remove();
     pendingNext = null;
@@ -65,7 +59,7 @@ function playReaction(svgFile, durationMs) {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.children]) {
+    for (const child of [...visualLayer.children]) {
       if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
@@ -74,7 +68,7 @@ function playReaction(svgFile, durationMs) {
   };
 
   attachVisualReadyHandler(next, swap);
-  container.appendChild(next);
+  visualLayer.appendChild(next);
   pendingNext = next;
   installSwapFallback(next, swap);
 
@@ -89,9 +83,11 @@ function endReaction() {
 }
 
 function cancelReaction() {
-  // Click timers are now in hit-renderer.js — only clear local reaction state
   if (isReacting) {
-    if (reactTimer) { clearTimeout(reactTimer); reactTimer = null; }
+    if (reactTimer) {
+      clearTimeout(reactTimer);
+      reactTimer = null;
+    }
     isReacting = false;
   }
   if (isDragReacting) {
@@ -101,14 +97,17 @@ function cancelReaction() {
 
 // --- Drag reaction (loops while dragging, idle-follow only) ---
 function swapToSvg(svgFile) {
-  if (pendingNext) { pendingNext.remove(); pendingNext = null; }
+  if (pendingNext) {
+    pendingNext.remove();
+    pendingNext = null;
+  }
   const next = createVisualElement(svgFile);
   next.style.opacity = "0";
   const swap = () => {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.children]) {
+    for (const child of [...visualLayer.children]) {
       if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
@@ -116,18 +115,20 @@ function swapToSvg(svgFile) {
     currentDisplayedSvg = svgFile;
   };
   attachVisualReadyHandler(next, swap);
-  container.appendChild(next);
+  visualLayer.appendChild(next);
   pendingNext = next;
   installSwapFallback(next, swap);
 }
 
 function startDragReaction() {
   if (isDragReacting) return;
-  if (dndEnabled) return;  // DND: just move the window, no reaction animation
+  if (dndEnabled) return; // DND: just move the window, no reaction animation
 
-  // Drag interrupts click reaction if active
   if (isReacting) {
-    if (reactTimer) { clearTimeout(reactTimer); reactTimer = null; }
+    if (reactTimer) {
+      clearTimeout(reactTimer);
+      reactTimer = null;
+    }
     isReacting = false;
   }
 
@@ -150,7 +151,6 @@ let currentDisplayedSvg = getElementVisualName(clawdEl);
 currentIdleSvg = currentDisplayedSvg;
 
 window.electronAPI.onStateChange((state, svg) => {
-  // Main process state change → cancel any active click reaction
   cancelReaction();
 
   if (pendingNext) {
@@ -175,7 +175,7 @@ window.electronAPI.onStateChange((state, svg) => {
     if (pendingNext !== next) return;
     next.style.transition = "none";
     next.style.opacity = "1";
-    for (const child of [...container.children]) {
+    for (const child of [...visualLayer.children]) {
       if (child !== next) removeVisualElement(child);
     }
     pendingNext = null;
@@ -186,12 +186,11 @@ window.electronAPI.onStateChange((state, svg) => {
       attachEyeTracking(next);
     }
 
-    // Track current SVG for click reaction gating
     currentIdleSvg = svg;
   };
 
   attachVisualReadyHandler(next, swap);
-  container.appendChild(next);
+  visualLayer.appendChild(next);
   pendingNext = next;
   installSwapFallback(next, swap);
 });
@@ -212,7 +211,11 @@ function installSwapFallback(el, onReady) {
   setTimeout(() => {
     if (pendingNext !== el) return;
     try {
-      if (!el.contentDocument) { el.remove(); pendingNext = null; return; }
+      if (!el.contentDocument) {
+        el.remove();
+        pendingNext = null;
+        return;
+      }
     } catch {
       el.remove();
       pendingNext = null;
@@ -244,7 +247,6 @@ function applyEyeMove(dx, dy) {
     const bdy = Math.round(dy * 0.33 * 2) / 2;
     if (bodyTarget) bodyTarget.style.transform = `translate(${bdx}px, ${bdy}px)`;
     if (shadowTarget) {
-      // Shadow stretches toward lean direction (feet stay anchored)
       const absDx = Math.abs(bdx);
       const scaleX = 1 + absDx * 0.15;
       const shiftX = Math.round(bdx * 0.3 * 2) / 2;
@@ -282,7 +284,6 @@ function attachEyeTracking(objectEl) {
       console.warn("Timed out waiting for SVG eye targets");
       return;
     }
-    // setTimeout fallback — rAF may be throttled in unfocused windows
     setTimeout(() => tryAttach(attempt + 1), 16);
   };
 
@@ -299,7 +300,6 @@ function detachEyeTracking() {
 window.electronAPI.onEyeMove((dx, dy) => {
   lastEyeDx = dx;
   lastEyeDy = dy;
-  // Detect stale eye targets (e.g. after DWM z-order recovery invalidates contentDocument)
   if (eyeTarget && !eyeTarget.ownerDocument?.defaultView) {
     eyeTarget = null;
     bodyTarget = null;
@@ -310,7 +310,6 @@ window.electronAPI.onEyeMove((dx, dy) => {
   applyEyeMove(dx, dy);
 });
 
-// --- Wake from doze (smooth eye opening) ---
 window.electronAPI.onWakeFromDoze(() => {
   if (clawdEl && clawdEl.contentDocument) {
     try {
@@ -318,4 +317,53 @@ window.electronAPI.onWakeFromDoze(() => {
       if (eyes) eyes.style.transform = "scaleY(1)";
     } catch (e) {}
   }
+});
+
+// --- Pomodoro floating widget ---
+const pomodoroWidget = document.getElementById("pomodoro-widget");
+const pomodoroIcon = document.getElementById("pomodoro-icon");
+const pomodoroCountdown = document.getElementById("pomodoro-countdown");
+let pomodoroFrameTimer = null;
+let pomodoroFrameIndex = 0;
+
+function startPomodoroIconAnimation() {
+  if (!pomodoroIcon || pomodoroFrameTimer) return;
+  pomodoroFrameTimer = setInterval(() => {
+    pomodoroFrameIndex = (pomodoroFrameIndex + 1) % 4;
+    pomodoroIcon.src = `../assets/png/clawd-tomato/tomato_${pomodoroFrameIndex}.png`;
+  }, 160);
+}
+
+function stopPomodoroIconAnimation() {
+  if (!pomodoroFrameTimer) return;
+  clearInterval(pomodoroFrameTimer);
+  pomodoroFrameTimer = null;
+}
+
+function formatCountdown(remainingMs) {
+  const totalSeconds = Math.max(0, Math.ceil((remainingMs || 0) / 1000));
+  const mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const ss = String(totalSeconds % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
+window.electronAPI.onPomodoroState((data) => {
+  if (!pomodoroWidget || !pomodoroCountdown || !pomodoroIcon || !data) return;
+
+  if (!data.visible) {
+    pomodoroWidget.style.display = "none";
+    stopPomodoroIconAnimation();
+    pomodoroFrameIndex = 0;
+    pomodoroIcon.src = "../assets/png/clawd-tomato/tomato_0.png";
+    return;
+  }
+
+  pomodoroWidget.style.display = "flex";
+  pomodoroCountdown.textContent = formatCountdown(data.remainingMs);
+
+  if (data.paused) {
+    stopPomodoroIconAnimation();
+    return;
+  }
+  startPomodoroIconAnimation();
 });
