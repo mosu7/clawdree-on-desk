@@ -6,7 +6,7 @@
         opacity: 0;
         animation-name: frame-step;
         animation-duration: var(--duration);
-        animation-timing-function: steps(1, end);
+        animation-timing-function: steps(1, start);
         animation-iteration-count: 1;
         animation-fill-mode: forwards;
         image-rendering: pixelated;

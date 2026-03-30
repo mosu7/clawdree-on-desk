@@ -23,7 +23,7 @@
       .loop {
         animation-name: intro-step, loop-step;
         animation-duration: var(--intro-duration), var(--loop-duration);
-        animation-timing-function: steps(1, end), steps(1, end);
+        animation-timing-function: steps(1, end), steps(1, start);
         animation-iteration-count: 1, infinite;
         animation-fill-mode: none, forwards;
       }
