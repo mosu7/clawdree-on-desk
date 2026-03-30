@@ -46,25 +46,25 @@ html, body {
 
 #pomodoro-widget {
   position: absolute;
-  left: 50%;
-  top: 14%;
+  left: 42%;
+  top: 30%;
   transform: translateX(-50%);
   display: none;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
   pointer-events: none;
   z-index: 5;
 }
 
 #pomodoro-icon {
-  width: 104px;
-  height: 104px;
+  width: 60px;
+  height: 60px;
   image-rendering: pixelated;
 }
 
 #pomodoro-countdown {
-  min-width: 58px;
+  min-width: 18px;
   text-align: left;
   font-size: 18px;
   line-height: 1;
