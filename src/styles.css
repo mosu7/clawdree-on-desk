@@ -47,19 +47,19 @@ html, body {
 #pomodoro-widget {
   position: absolute;
   left: 50%;
-  top: 6%;
+  top: 14%;
   transform: translateX(-50%);
   display: none;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 10px;
   pointer-events: none;
   z-index: 5;
 }
 
 #pomodoro-icon {
-  width: 52px;
-  height: 52px;
+  width: 104px;
+  height: 104px;
   image-rendering: pixelated;
 }
 
